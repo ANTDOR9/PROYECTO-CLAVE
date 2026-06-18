@@ -6,7 +6,8 @@
 
 /* íconos (trazos SVG simples) */
 const ICONS = {
-  play:  '<path d="M8 5v14l11-7z"/>',
+  play:   '<path d="M8 5v14l11-7z"/>',
+  target: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1"/>',
   plus:  '<path d="M12 5v14M5 12h14"/>',
   stack: '<path d="M12 3l9 5-9 5-9-5 9-5zM3 13l9 5 9-5M3 17l9 5 9-5"/>',
   spark: '<path d="M12 3l1.8 4.8L19 9l-4.8 1.8L12 16l-2.2-5.2L4 9l5.2-1.2z"/>',
@@ -18,12 +19,12 @@ const svg = (p) => `<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="cur
 
 /* ── La lista de mosaicos. Agregar un botón = una entrada más aquí. ── */
 const TILES = [
-  { id: 'insertar',  lbl: 'Insertar',     sub: 'Pegar preguntas',  icon: ICONS.plus,  color: 'teal',   action: () => go('insertar') },
-  { id: 'cursos',    lbl: 'Mis cursos',   sub: 'Crear y editar',   icon: ICONS.stack, color: 'violet', action: () => go('cursos') },
-  { id: 'simulacro', lbl: 'Simulacro IA', sub: 'Examen difícil',   icon: ICONS.spark, soon: true },
-  { id: 'progreso',  lbl: 'Progreso',     sub: 'Tus estadísticas', icon: ICONS.chart, soon: true },
-  { id: 'respaldo',  lbl: 'Respaldo',     sub: 'Exportar copia',   icon: ICONS.save,  color: 'green',  action: exportarBackup },
-  { id: 'ajustes',   lbl: 'Ajustes',      sub: 'Preferencias',     icon: ICONS.gear,  soon: true },
+  { id: 'insertar',  lbl: 'Insertar',     sub: 'Pegar preguntas',     icon: ICONS.plus,   color: 'teal',   action: () => go('insertar') },
+  { id: 'cursos',    lbl: 'Mis cursos',   sub: 'Crear y editar',      icon: ICONS.stack,  color: 'violet', action: () => go('cursos') },
+  { id: 'examen',    lbl: 'Examen',       sub: 'Mezcla evaluaciones', icon: ICONS.target, color: 'amber',  action: () => go('examen') },
+  { id: 'respaldo',  lbl: 'Respaldo',     sub: 'Exportar copia',      icon: ICONS.save,   color: 'green',  action: exportarBackup },
+  { id: 'progreso',  lbl: 'Progreso',     sub: 'Tus estadísticas',    icon: ICONS.chart,  soon: true },
+  { id: 'simulacro', lbl: 'Simulacro IA', sub: 'Examen difícil',      icon: ICONS.spark,  soon: true },
 ];
 
 /* cuenta cursos y preguntas para mostrar en el menú */
