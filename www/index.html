@@ -2,119 +2,144 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Trivia · modo estudio</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#140e22">
+<title>CLAVE</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
-<div class="wrap">
-  <header class="app">
-    <span class="lamp"></span>
-    <h1>Trivia · modo estudio</h1>
-    <span class="tag" id="env-tag"></span>
-  </header>
 
-  <!-- ===== INICIO ===== -->
-  <section id="start" class="card">
-    <p class="lede">Pega tus preguntas y estudia como un juego.</p>
-    <p class="sub">Cada bloque: una pregunta, 4 alternativas y la correcta marcada con <b style="color:var(--amber)">*</b>. La explicación (línea con <b style="color:var(--amber)">&gt;</b>) es opcional. También acepta JSON.</p>
+<!-- Barra superior: visible en todas las pantallas menos el menú -->
+<header id="topbar">
+  <button id="backBtn" aria-label="Volver">←</button>
+  <span id="title"></span>
+</header>
 
-    <textarea id="input" spellcheck="false" placeholder="1. ¿Qué hace SELECT DISTINCT?
-a) Ordena las filas
-b) Elimina filas duplicadas *
-c) Cuenta las filas
-d) Une dos tablas
-> DISTINCT descarta las filas repetidas del resultado."></textarea>
+<main id="app">
 
-    <div class="opts">
-      <label class="toggle"><input type="checkbox" id="shuffleQ" checked> Mezclar preguntas</label>
-      <label class="toggle"><input type="checkbox" id="shuffleA" checked> Mezclar alternativas</label>
-      <div class="seg" id="mode" role="tablist" aria-label="Modo">
-        <button class="on" data-mode="study">Estudio</button>
-        <button data-mode="exam">Examen</button>
+  <!-- ========== MENÚ (inicio) ========== -->
+  <section id="screen-menu" class="screen active">
+    <div class="brand">
+      <div class="lamp"></div>
+      <h1>CLAVE</h1>
+      <p id="menuStats">Tu repaso para SENATI</p>
+    </div>
+    <div class="grid" id="grid"><!-- los mosaicos los pone menu.js --></div>
+  </section>
+
+  <!-- ========== INSERTAR ========== -->
+  <section id="screen-insertar" class="screen">
+    <p class="lead">Elige dónde guardarlas, pega el texto y revisa antes de guardar.</p>
+
+    <div class="dest">
+      <div class="dest-row">
+        <label>Curso</label>
+        <select id="selCurso"><option value="">— elige curso —</option></select>
+        <button class="mini" id="addCurso" title="Nuevo curso">+</button>
+      </div>
+      <div class="new" id="formCurso">
+        <input id="cursoNombre" placeholder="Nombre del curso (ej. Base de Datos)">
+        <div class="swatches" id="swatches"></div>
+        <button class="create" id="crearCurso">Crear</button>
+      </div>
+
+      <div class="dest-row">
+        <label>Evaluación</label>
+        <select id="selEval" disabled><option value="">— elige curso primero —</option></select>
+        <button class="mini" id="addEval" disabled title="Nueva evaluación">+</button>
+      </div>
+      <div class="new" id="formEval">
+        <input id="evalNombre" placeholder="Nombre (ej. Autoevaluación 1)">
+        <select id="evalTipo" class="tipo">
+          <option value="autoevaluacion">Autoevaluación</option>
+          <option value="videotest">Videotest</option>
+        </select>
+        <button class="create" id="crearEval">Crear</button>
       </div>
     </div>
 
-    <div class="row">
-      <button class="btn primary" id="load">Empezar</button>
-      <button class="btn" id="sample">Usar ejemplos</button>
-      <button class="btn hidden" id="resume">Continuar últimas</button>
+    <div class="toolbar">
+      <button class="btn" id="bPaste">Pegar</button>
+      <button class="btn" id="bAll">Seleccionar todo</button>
+      <button class="btn danger" id="bClear">Borrar</button>
+      <button class="btn prompt" id="bPrompt">Copiar prompt</button>
     </div>
-    <div class="err" id="err"></div>
 
-    <details>
-      <summary>Ver formatos aceptados y prompt para la IA</summary>
-      <pre>FORMATO TEXTO
-─────────────
-1. Pregunta aquí
-a) Alternativa
-b) Correcta *        ← la correcta lleva  *  al final
-c) Alternativa
-d) Alternativa
-> Explicación opcional
+    <textarea id="ta" placeholder="1. ¿Qué comando inicia un repositorio Git?
+a) git start
+b) git init *
+c) git new
+d) git create
+> 'git init' crea un repositorio vacío.
 
-(separa cada pregunta con una línea en blanco. Las letras
-pueden ser a) A. 1) - lo que sea; lo que importa es el  * )
+2. ¿Cuáles son lenguajes de marcado?
+a) HTML *
+b) Python
+c) XML *
+d) Java"></textarea>
 
-FORMATO JSON
-─────────────
-[
-  {"q":"¿...?","options":["a","b","c","d"],"correct":1,"explain":"..."}
-]
-("correct" empieza en 0. "explain" es opcional)
+    <div class="status">
+      <span id="pill" class="pill err">0 preguntas</span>
+      <span id="hint" class="muted"></span>
+    </div>
 
-PROMPT PARA TU IA
-─────────────
-"Dame N preguntas de opción múltiple sobre [TEMA], cada una con
-4 alternativas, marcando la correcta con un * al final de la
-línea, y una línea de explicación que empiece con >. Separa
-cada pregunta con una línea en blanco. Solo eso, sin texto extra."</pre>
-    </details>
+    <div class="preview" id="preview"></div>
+
+    <button class="save" id="bSave" disabled>Guardar preguntas</button>
+    <p class="total" id="totalLine">Elige una evaluación para guardar.</p>
   </section>
 
-  <!-- ===== QUIZ ===== -->
-  <section id="quiz" class="hidden">
-    <div class="topbar">
-      <span class="count" id="count">1 / 10</span>
-      <span class="streak" id="streak">racha 0</span>
-      <span class="score" id="score">0 pts</span>
+  <!-- ========== MIS CURSOS ========== -->
+  <section id="screen-cursos" class="screen">
+    <div id="cursos-list"><!-- lo arma cursos.js (modo gestionar) --></div>
+  </section>
+
+  <!-- ========== ESTUDIAR (elegir qué jugar) ========== -->
+  <section id="screen-estudiar" class="screen">
+    <p class="lead">Toca una evaluación para empezar a estudiar.</p>
+    <div id="estudiar-list"><!-- lo arma cursos.js (modo estudiar) --></div>
+  </section>
+
+  <!-- ========== QUIZ (el juego) ========== -->
+  <section id="screen-quiz" class="screen">
+    <div class="quiz-top">
+      <span id="quizProgress" class="mono">1 / 1</span>
+      <div class="quiz-bar"><div id="quizBar"></div></div>
     </div>
-    <div class="bar"><i id="progress"></i></div>
+    <p id="quizImg" class="quiz-img" hidden>Esta pregunta llevaba una imagen.</p>
+    <h2 id="quizQuestion" class="quiz-q"></h2>
+    <div id="quizOptions" class="quiz-options"></div>
+    <div id="quizExplain" class="quiz-explain" hidden></div>
+    <button id="quizCheck" class="save" hidden>Comprobar</button>
+    <button id="quizNext" class="save" hidden>Siguiente</button>
+  </section>
 
-    <div class="qnum" id="qnum">Pregunta 1</div>
-    <h2 class="question" id="qtext"></h2>
-    <div id="answers"></div>
-    <div class="explain" id="explain"></div>
-
-    <div class="nextrow">
-      <button class="btn primary hidden" id="next">Siguiente</button>
-      <span class="hint">Teclas: 1-4 o A-D · Enter para continuar</span>
+  <!-- ========== RESULTADOS ========== -->
+  <section id="screen-result" class="screen">
+    <div class="result">
+      <p class="res-label">Resultado</p>
+      <div id="resNota" class="res-nota mono">0</div>
+      <p id="resScore" class="res-score"></p>
+      <div id="resDetail" class="res-detail"></div>
+      <button id="resRetry" class="save">Repetir</button>
+      <button id="resMenu" class="btn block">Volver al menú</button>
     </div>
   </section>
 
-  <!-- ===== FIN ===== -->
-  <section id="end" class="hidden">
-    <div class="card">
-      <div class="bigscore" id="pct">0%</div>
-      <div class="scorelabel" id="verdict"></div>
-      <div class="stats">
-        <div class="stat"><div class="n" style="color:var(--green)" id="nok">0</div><div class="l">Aciertos</div></div>
-        <div class="stat"><div class="n" style="color:var(--rose)" id="nbad">0</div><div class="l">Fallos</div></div>
-        <div class="stat"><div class="n" style="color:var(--amber)" id="best">0</div><div class="l">Mejor racha</div></div>
-      </div>
-      <div class="row">
-        <button class="btn primary" id="again">Repetir todo</button>
-        <button class="btn hidden" id="retryWrong">Repasar las falladas</button>
-        <button class="btn" id="back">Cargar otras</button>
-      </div>
-    </div>
-    <div class="review" id="review"></div>
-  </section>
-</div>
+</main>
 
+<div class="toast" id="toast"></div>
+
+<!-- ========== ORDEN DE LOS SCRIPTS (importa) ========== -->
+<script src="js/db.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/menu.js"></script>
+<script src="js/insertar.js"></script>
+<script src="js/cursos.js"></script>
+<script src="js/quiz.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>
