@@ -1,0 +1,21 @@
+# ─── Dependencias (se regeneran con: npm install) ───
+node_modules/
+
+# ─── Builds y artefactos ───
+dist/
+*.apk
+*.aab
+*.keystore
+
+# ─── Android: cachés y compilados ───
+android/.gradle/
+android/build/
+android/app/build/
+android/capacitor-cordova-android-plugins/build/
+android/local.properties
+
+# ─── Sistema operativo / editores ───
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
