@@ -1,5 +1,12 @@
 {
   "appId": "com.anthony.clave",
   "appName": "CLAVE",
-  "webDir": "www"
+  "webDir": "www",
+  "plugins": {
+    "EdgeToEdge": {
+      "backgroundColor": "#140e22",
+      "statusBarColor": "#140e22",
+      "navigationBarColor": "#140e22"
+    }
+  }
 }
