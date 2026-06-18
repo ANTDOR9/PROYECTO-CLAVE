@@ -115,7 +115,7 @@ const DB = {
   deletePregunta(id)           { return this._delete('preguntas', Number(id)); },
   updatePregunta(q)            { return this._put('preguntas', q); },
 
-  /* ---------- RESPALDO (lo usaremos en la pantalla de backup) ---------- */
+  /* ---------- RESPALDO ---------- */
   async exportAll() {
     return {
       version: 1,
@@ -124,6 +124,33 @@ const DB = {
       evaluaciones: await this._all('evaluaciones'),
       preguntas:    await this._all('preguntas'),
     };
+  },
+
+  /* borra TODO (las 3 cajas) */
+  async clearAll() {
+    const borra = (store) => new Promise((res, rej) => {
+      const r = this._db.transaction(store, 'readwrite').objectStore(store).clear();
+      r.onsuccess = () => res();
+      r.onerror = (e) => rej(e.target.error);
+    });
+    await borra('preguntas');
+    await borra('evaluaciones');
+    await borra('cursos');
+  },
+
+  /* reemplaza todo el contenido por el de un respaldo (restaurar) */
+  async importAll(data) {
+    await this.clearAll();
+    const meter = (store, items) => new Promise((res, rej) => {
+      const tx = this._db.transaction(store, 'readwrite');
+      const os = tx.objectStore(store);
+      (items || []).forEach(it => os.put(it));   // put conserva el id original
+      tx.oncomplete = res;
+      tx.onerror = (e) => rej(e.target.error);
+    });
+    await meter('cursos', data.cursos);
+    await meter('evaluaciones', data.evaluaciones);
+    await meter('preguntas', data.preguntas);
   },
 };
 
