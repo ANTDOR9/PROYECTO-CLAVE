@@ -29,10 +29,17 @@ body{
   backdrop-filter:blur(6px); border-bottom:1px solid var(--line);
 }
 #backBtn{
-  border:1px solid var(--line); background:var(--panel); color:var(--ink);
-  width:38px; height:38px; border-radius:11px; font-size:20px; cursor:pointer; flex:none;
+  border:1px solid var(--line); background:var(--panel); color:var(--amber-soft);
+  width:44px; height:44px; border-radius:50%; font-size:25px; line-height:1;
+  cursor:pointer; flex:none; display:grid; place-items:center;
+  transition:transform .12s ease, background .2s ease, border-color .2s ease, box-shadow .2s ease;
 }
-#backBtn:active{transform:scale(.94)}
+#backBtn:hover{ background:var(--panel-2); border-color:rgba(255,211,107,.4); }
+#backBtn:active{
+  transform:scale(.9);
+  background:rgba(255,211,107,.16);
+  box-shadow:0 0 0 5px rgba(255,211,107,.12);
+}
 #title{font-family:'Fraunces',Georgia,serif; font-weight:600; font-size:19px}
 
 /* ===== contenedor de pantallas ===== */
