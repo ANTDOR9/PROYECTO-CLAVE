@@ -138,6 +138,17 @@ d) Java"></textarea>
       <button id="examen-start" class="save" disabled>Empezar examen</button>
     </div>
   </section>
+
+  <!-- ========== RESPALDO ========== -->
+  <section id="screen-respaldo" class="screen">
+    <p class="lead">Guarda una copia de todo tu contenido o restáuralo desde un archivo.</p>
+    <button id="resp-export" class="save">Exportar copia (.json)</button>
+    <label class="btn block" for="resp-import-file">Importar copia…</label>
+    <input id="resp-import-file" type="file" accept="application/json,.json" hidden>
+    <p class="muted" style="font-size:12.5px; margin-top:14px; line-height:1.5">
+      Importar <b>reemplaza</b> todo tu contenido actual por el del archivo. Úsalo para restaurar o pasar tus datos a otro dispositivo.
+    </p>
+  </section>
 </main>
 
 <div class="toast" id="toast"></div>
@@ -151,6 +162,7 @@ d) Java"></textarea>
 <script src="js/cursos.js"></script>
 <script src="js/quiz.js"></script>
 <script src="js/examen.js"></script>
+<script src="js/respaldo.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>

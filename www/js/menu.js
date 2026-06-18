@@ -22,7 +22,7 @@ const TILES = [
   { id: 'insertar',  lbl: 'Insertar',     sub: 'Pegar preguntas',     icon: ICONS.plus,   color: 'teal',   action: () => go('insertar') },
   { id: 'cursos',    lbl: 'Mis cursos',   sub: 'Crear y editar',      icon: ICONS.stack,  color: 'violet', action: () => go('cursos') },
   { id: 'examen',    lbl: 'Examen',       sub: 'Mezcla evaluaciones', icon: ICONS.target, color: 'amber',  action: () => go('examen') },
-  { id: 'respaldo',  lbl: 'Respaldo',     sub: 'Exportar copia',      icon: ICONS.save,   color: 'green',  action: exportarBackup },
+  { id: 'respaldo',  lbl: 'Respaldo',     sub: 'Copia y restaura',    icon: ICONS.save,   color: 'green',  action: () => go('respaldo') },
   { id: 'progreso',  lbl: 'Progreso',     sub: 'Tus estadísticas',    icon: ICONS.chart,  soon: true },
   { id: 'simulacro', lbl: 'Simulacro IA', sub: 'Examen difícil',      icon: ICONS.spark,  soon: true },
 ];
