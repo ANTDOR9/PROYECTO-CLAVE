@@ -72,6 +72,7 @@ function mostrarPregunta() {
 
   $$('.qopt', cont).forEach(btn => btn.onclick = () => {
     if (answered) return;
+    Sonido.click();
     if (multi) {
       btn.classList.toggle('sel');
       btn.querySelector('.mark').textContent = btn.classList.contains('sel') ? '\u2713' : '';
@@ -90,6 +91,7 @@ function mostrarPregunta() {
   function responder(sel) {
     answered = true;
     const correcto = sel.slice().sort().join(',') === q.correctas.slice().sort().join(',');
+    correcto ? Sonido.acierto() : Sonido.error();
 
     $$('.qopt', cont).forEach(b => {
       const i = Number(b.dataset.i);
