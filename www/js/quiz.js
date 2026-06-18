@@ -1,10 +1,14 @@
 /* ============================================================
    quiz.js — El juego + la pantalla de resultados
-   Soporta respuesta única y multi-respuesta, da feedback,
-   muestra la explicación y al final calcula tu nota (0-20).
+   Soporta respuesta unica y multi-respuesta, da feedback,
+   muestra la explicacion y al final calcula tu nota (0-20).
+
+   Puede arrancar de dos formas:
+     - desde una evaluacion:  go('quiz', evaluacionId)
+     - desde una mezcla:      go('quiz', { preguntas, recargar })
    ============================================================ */
 
-let Q = null;   // estado de la partida: { evalId, list, idx, score, wrong }
+let Q = null;   // partida actual: { list, idx, score, wrong, recargar }
 
 /* baraja un array (copia) */
 function shuffle(a) {
@@ -25,18 +29,21 @@ function prepararPregunta(q) {
   return { ...q, opciones, correctas };
 }
 
-/* arranca una partida con las preguntas de una evaluación */
-async function startQuiz(evalId) {
-  const preguntas = await DB.getPreguntas(evalId);
-  if (!preguntas.length) { toast('Esta evaluación no tiene preguntas'); back(); return; }
+/* arranca una partida con un arreglo de preguntas.
+   recargar() es una funcion que devuelve preguntas frescas (para "Repetir"). */
+function iniciarQuiz(preguntas, recargar) {
+  if (!preguntas || !preguntas.length) { toast('No hay preguntas para estudiar'); back(); return; }
   Q = {
-    evalId,
     list: shuffle(preguntas).map(prepararPregunta),
-    idx: 0,
-    score: 0,
-    wrong: [],
+    idx: 0, score: 0, wrong: [],
+    recargar,
   };
   mostrarPregunta();
+}
+
+/* atajo: arrancar desde una sola evaluacion */
+async function startQuiz(evalId) {
+  iniciarQuiz(await DB.getPreguntas(evalId), () => DB.getPreguntas(evalId));
 }
 
 /* dibuja la pregunta actual y maneja la respuesta */
@@ -63,18 +70,16 @@ function mostrarPregunta() {
 
   let answered = false;
 
-  /* tocar una alternativa */
   $$('.qopt', cont).forEach(btn => btn.onclick = () => {
     if (answered) return;
     if (multi) {
       btn.classList.toggle('sel');
-      btn.querySelector('.mark').textContent = btn.classList.contains('sel') ? '✓' : '';
+      btn.querySelector('.mark').textContent = btn.classList.contains('sel') ? '\u2713' : '';
     } else {
       responder([Number(btn.dataset.i)]);
     }
   });
 
-  /* botón Comprobar (solo multi-respuesta) */
   check.onclick = () => {
     if (answered) return;
     const sel = $$('.qopt.sel', cont).map(b => Number(b.dataset.i));
@@ -90,8 +95,8 @@ function mostrarPregunta() {
       const i = Number(b.dataset.i);
       const mark = b.querySelector('.mark');
       b.disabled = true; b.classList.remove('sel');
-      if (q.correctas.includes(i)) { b.classList.add('correct'); mark.textContent = '✓'; }
-      else if (sel.includes(i))    { b.classList.add('wrong');   mark.textContent = '✕'; }
+      if (q.correctas.includes(i)) { b.classList.add('correct'); mark.textContent = '\u2713'; }
+      else if (sel.includes(i))    { b.classList.add('wrong');   mark.textContent = '\u2715'; }
       else                         { mark.textContent = ''; }
     });
 
@@ -104,7 +109,6 @@ function mostrarPregunta() {
     $('#quizBar').style.width = `${((Q.idx + 1) / total) * 100}%`;
   }
 
-  /* botón Siguiente / Ver resultado */
   next.onclick = () => {
     Q.idx++;
     if (Q.idx >= total) finish();
@@ -125,7 +129,7 @@ function renderResult() {
   const nota = Math.round((score / total) * 20);
 
   $('#resNota').textContent = nota;
-  $('#resScore').textContent = `${score} de ${total} correctas · nota ${nota}/20`;
+  $('#resScore').textContent = `${score} de ${total} correctas \u00b7 nota ${nota}/20`;
 
   const detail = $('#resDetail');
   if (Q.wrong.length) {
@@ -136,22 +140,29 @@ function renderResult() {
         (q.explicacion ? `<div class="meta"><span class="tag">${esc(q.explicacion)}</span></div>` : '') +
         `</div>`).join('');
   } else {
-    detail.innerHTML = `<div class="empty" style="padding:14px">¡Perfecto, todas correctas!</div>`;
+    detail.innerHTML = `<div class="empty" style="padding:14px">\u00a1Perfecto, todas correctas!</div>`;
   }
 }
 
-/* botones de la pantalla de resultados (son fijos, se enlazan una vez) */
-$('#resRetry').onclick = () => {
-  if (!Q) return;
-  const id = Q.evalId;
-  navStack.pop();          // quita 'result'
-  go('quiz', id);
+/* botones de la pantalla de resultados (fijos, se enlazan una vez) */
+$('#resRetry').onclick = async () => {
+  if (!Q || !Q.recargar) return;
+  const recargar = Q.recargar;
+  const fresh = await recargar();
+  navStack.pop();                 // quita 'result'
+  go('quiz', { preguntas: fresh, recargar });
 };
 $('#resMenu').onclick = () => {
-  navStack.length = 1;     // deja solo 'menu'
+  navStack.length = 1;            // deja solo 'menu'
   go('menu');
 };
 
 /* registrar pantallas */
-SCREENS.quiz   = { enter(evalId) { if (evalId != null) startQuiz(evalId); } };
+SCREENS.quiz = {
+  enter(payload) {
+    if (payload == null) return;
+    if (typeof payload === 'number') startQuiz(payload);            // desde una evaluacion
+    else if (payload.preguntas) iniciarQuiz(payload.preguntas, payload.recargar); // desde una mezcla
+  }
+};
 SCREENS.result = { enter() {} };
