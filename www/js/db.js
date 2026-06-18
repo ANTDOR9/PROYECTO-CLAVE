@@ -131,53 +131,76 @@ const DB = {
 /* ============================================================
    parse(texto) -> { questions, errors }
    Formato esperado:
-     1. Enunciado de la pregunta
-     [imagen]                 (opcional, marca que lleva foto)
+     1. Enunciado de la pregunta        (el "1." es opcional)
+     [imagen]                           (opcional, marca que lleva foto)
      a) Alternativa
-     b) Correcta *            (* al final = correcta; varias * = multi-respuesta)
-     > Explicación            (opcional)
-   Cada pregunta se separa con una línea en blanco.
+     b) Correcta *                      (* al final = correcta; varias * = multi)
+     > Explicación                      (opcional)
+
+   Tolerante: separa cada pregunta con una línea en blanco O detecta
+   sola el inicio de una pregunta nueva cuando aparece un enunciado
+   después de las alternativas (aunque no haya línea en blanco).
    ============================================================ */
 function parse(text) {
   const errors = [];
   const questions = [];
-  const blocks = text.trim().split(/\n\s*\n/).filter(b => b.trim());
+  let cur = null;
+  const nueva = () => ({ enunciado: [], opciones: [], correctas: [], explicacion: '', imagen: false });
 
-  blocks.forEach((block, bi) => {
-    const lines = block.split('\n').map(l => l.trim()).filter(Boolean);
-    let enunciado = [], opciones = [], correctas = [], explicacion = '', imagen = false;
-
-    lines.forEach(line => {
-      const opt = line.match(/^([a-zA-Z])[\)\.]\s+(.*)$/);   // "a) texto"
-      if (opt) {
-        let txt = opt[2];
-        const esCorrecta = /\*\s*$/.test(txt);               // termina en *
-        txt = txt.replace(/\s*\*\s*$/, '').trim();
-        if (esCorrecta) correctas.push(opciones.length);
-        opciones.push(txt);
-      } else if (/^>\s?/.test(line)) {
-        explicacion = line.replace(/^>\s?/, '').trim();
-      } else if (/^\[imagen\]$/i.test(line)) {
-        imagen = true;
-      } else {
-        enunciado.push(line.replace(/^\d+[\.\)]\s*/, ''));   // quita el "1. " del inicio
-      }
-    });
-
-    const enun = enunciado.join(' ').trim();
-    const n = bi + 1;
-    if (!enun) {
-      errors.push(`Pregunta ${n}: falta el enunciado.`); return;
+  function cerrar() {
+    if (!cur) return;
+    const enun = cur.enunciado.join(' ').trim();
+    const n = questions.length + 1;
+    if (!enun) { errors.push(`Pregunta ${n}: falta el enunciado.`); cur = null; return; }
+    if (cur.opciones.length < 2) {
+      errors.push(`Pregunta ${n} ("${enun.slice(0, 30)}…"): necesita al menos 2 alternativas.`); cur = null; return;
     }
-    if (opciones.length < 2) {
-      errors.push(`Pregunta ${n} ("${enun.slice(0, 30)}…"): necesita al menos 2 alternativas.`); return;
-    }
-    if (correctas.length === 0) {
+    if (cur.correctas.length === 0) {
       errors.push(`Pregunta ${n} ("${enun.slice(0, 30)}…"): ninguna alternativa marcada con *.`);
     }
+    questions.push({
+      enunciado: enun, opciones: cur.opciones, correctas: cur.correctas,
+      explicacion: cur.explicacion, imagen: cur.imagen,
+    });
+    cur = null;
+  }
 
-    questions.push({ enunciado: enun, opciones, correctas, explicacion, imagen });
-  });
+  for (const raw of text.split('\n')) {
+    const line = raw.trim();
+    if (!line) { cerrar(); continue; }                       // línea en blanco = separador
+
+    const opt = line.match(/^([a-zA-Z])[\)\.]\s+(.*)$/);     // "a) texto"
+    if (opt) {
+      if (!cur) cur = nueva();
+      let txt = opt[2];
+      const esCorrecta = /\*\s*$/.test(txt);
+      txt = txt.replace(/\s*\*\s*$/, '').trim();
+      if (esCorrecta) cur.correctas.push(cur.opciones.length);
+      cur.opciones.push(txt);
+      continue;
+    }
+    if (/^>\s?/.test(line)) {                                 // explicación
+      if (cur) cur.explicacion = line.replace(/^>\s?/, '').trim();
+      continue;
+    }
+    if (/^\[imagen\]$/i.test(line)) {                         // marca de imagen
+      if (!cur) cur = nueva();
+      cur.imagen = true;
+      continue;
+    }
+
+    // línea de enunciado (quita el "1. " si lo trae)
+    const limpio = line.replace(/^\d+[\.\)]\s*/, '');
+    if (cur && cur.opciones.length > 0) {   // ya había alternativas -> empieza otra pregunta
+      cerrar();
+      cur = nueva();
+      cur.enunciado.push(limpio);
+    } else {
+      if (!cur) cur = nueva();
+      cur.enunciado.push(limpio);
+    }
+  }
+  cerrar();
 
   return { questions, errors };
 }
